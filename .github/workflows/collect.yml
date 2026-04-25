@@ -31,6 +31,6 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add docs/feed.xml output/
+          git add docs/feed.xml
           git diff --staged --quiet || git commit -m "chore: update RSS feed $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
