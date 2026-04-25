@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import feedparser
-import requests
+import subprocess
 import anthropic
 from dotenv import load_dotenv
 
@@ -30,25 +30,34 @@ SYSTEM_PROMPT = (
     "指定されたフォーマットで簡潔に回答してください。"
 )
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-}
-
-
 # ─── RSS 取得 ─────────────────────────────────────────────────────────────────
 def strip_html(text: str) -> str:
     return re.sub(r"<[^>]+>", " ", text).strip()
+
+
+def fetch_rss(url: str) -> bytes:
+    result = subprocess.run(
+        [
+            "curl", "-s", "-L", "--max-time", "15",
+            "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "-H", "Accept-Language: en-US,en;q=0.5",
+            url,
+        ],
+        capture_output=True,
+        timeout=20,
+    )
+    return result.stdout
 
 
 def fetch_posts(subreddit_name: str) -> list[dict]:
     url = f"https://www.reddit.com/r/{subreddit_name}/hot.rss?limit={RSS_FETCH_LIMIT}"
     posts = []
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=10)
-        resp.raise_for_status()
-        feed = feedparser.parse(resp.content)
+        content = fetch_rss(url)
+        if not content:
+            raise ValueError("空のレスポンス")
+        feed = feedparser.parse(content)
         for entry in feed.entries:
             posts.append({
                 "title": entry.title,
