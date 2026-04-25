@@ -1,0 +1,36 @@
+name: Reddit ニュース収集
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 6時間ごと（UTC 0:00, 6:00, 12:00, 18:00）
+  workflow_dispatch:        # GitHub 画面から手動実行も可能
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run collector
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python collect_reddit.py
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/feed.xml output/
+          git diff --staged --quiet || git commit -m "chore: update RSS feed $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
