@@ -17,9 +17,13 @@ load_dotenv()
 
 # ─── 設定 ─────────────────────────────────────────────────────────────────────
 SUBREDDITS = [
+    # ニュース・国際
     "worldnews", "news", "geopolitics", "technology",
     "science", "business", "economics", "environment",
     "europe", "asia",
+    # マーケティング・広告
+    "marketing", "digital_marketing", "advertising",
+    "socialmedia", "entrepreneur",
 ]
 
 POSTS_PER_SUBREDDIT = 3
